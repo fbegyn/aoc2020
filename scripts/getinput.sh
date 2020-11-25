@@ -5,6 +5,6 @@ COOKIE=$AoCCookie
 DIR=day$(printf "%02d" $DAY)
 
 curl \
-  -fSL -o $DIR/input.txt \
+  -fSL -o ./inputs/$DIR/input.txt \
   -H "cookie:$COOKIE" \
   https://adventofcode.com/2019/day/$DAY/input
