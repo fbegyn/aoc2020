@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"bufio"
+	"strconv"
 	"os"
 )
 
@@ -37,6 +39,32 @@ func Abs(x int64) int64 {
 		return -x
 	}
 	return x
+}
+
+func LinesToInts(file *os.File) (ints []int, err error) {
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		integer, err := strconv.Atoi(line)
+		if err != nil {
+			return nil, err
+		}
+		ints = append(ints, integer)
+	}
+	return
+}
+
+func LinesToFloats(file *os.File) (floats []float64, err error) {
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		float, err := strconv.ParseFloat(line, 64)
+		if err != nil {
+			return nil, err
+		}
+		floats = append(floats, float)
+	}
+	return
 }
 
 // Min finds the min in a string - int map

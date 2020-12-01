@@ -1,10 +1,11 @@
-#! /usr/bin/env bash
+#! /usr/bin/env sh
 
 DAY=$1
-COOKIE=$AoCCookie
-DIR=day$(printf "%02d" $DAY)
+DIR=day$(printf "%02d" ${DAY})
+
+mkdir -p ./inputs/${DIR}/
 
 curl \
-  -fSL -o ./inputs/$DIR/input.txt \
-  -H "cookie:$COOKIE" \
-  https://adventofcode.com/2019/day/$DAY/input
+  -fSL -o ./inputs/${DIR}/input.txt \
+  -H "Cookie: ${AOCCOOKIE}" \
+  https://adventofcode.com/2020/day/${DAY}/input
