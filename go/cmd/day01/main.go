@@ -41,8 +41,12 @@ func part1(expenses []int) (int, error) {
 }
 
 func part2(expenses []int) (int, error) {
+	t := helpers.MinInt(expenses)
 	for i, v := range expenses {
 		for j, w := range expenses[i+1:] {
+			if v+w > 2020 - t {
+				continue
+			}
 			for _, z := range expenses[j+1:] {
 				if v+w+z == 2020 {
 					return v * w * z, nil

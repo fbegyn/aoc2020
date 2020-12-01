@@ -82,6 +82,20 @@ func Min(m map[string]int) (ind string) {
 	return
 }
 
+// Min finds the min in a string - int map
+func MinInt(m []int) (min int) {
+	min = 320000000
+	for _, v := range m {
+		if v == min {
+			continue
+		}
+		if v < min {
+			min = v
+		}
+	}
+	return
+}
+
 // Max finds the max in a string - int map
 func Max(m map[string]int) (ind string) {
 	max := 0
