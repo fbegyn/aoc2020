@@ -33,7 +33,6 @@ func part1(expenses []int) (int, error) {
 	for i, v := range expenses {
 		for _, w := range expenses[i+1:] {
 			if v+w == 2020 {
-				log.Printf("%d + %d = 2020", v, w)
 				return v * w, nil
 			}
 		}
@@ -46,7 +45,6 @@ func part2(expenses []int) (int, error) {
 		for j, w := range expenses[i+1:] {
 			for _, z := range expenses[j+1:] {
 				if v+w+z == 2020 {
-					log.Printf("%d + %d + %d = 2020", v, w, z)
 					return v * w * z, nil
 				}
 			}
