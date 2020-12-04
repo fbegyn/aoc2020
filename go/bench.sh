@@ -3,7 +3,8 @@
 days=()
 
 for file in ./bin/*; do
-    days+=("${file}")
+    day=$(basename $file)
+    days+=("${file} ../inputs/${day}/input.txt")
 done
 
 echo $days
