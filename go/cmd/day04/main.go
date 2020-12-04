@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 
 	"bufio"
 	"strings"
@@ -12,6 +13,70 @@ import (
 
 	"github.com/fbegyn/aoc2020/go/helpers"
 )
+
+func main() {
+	input := helpers.OpenFile("../inputs/day04/input.txt")
+	defer input.Close()
+
+	passportStream := make(chan Passport)
+	validStream := make(chan int)
+	strictValidStream := make(chan int)
+	validPassports := 0
+	strictValidPassports := 0
+
+	var wg sync.WaitGroup
+
+	go StreamValid(passportStream, validStream, strictValidStream)
+	wg.Add(1)
+	go StreamCount(&validPassports, validStream, &wg)
+	wg.Add(1)
+	go StreamCount(&strictValidPassports, strictValidStream, &wg)
+	
+	scanner := bufio.NewScanner(input)
+	passportData := []string{}
+	for scanner.Scan() {
+		line := scanner.Text()
+		fields := strings.Split(line, " ")
+		passportData = append(passportData, fields...)
+		if line == "" {
+			passport := PassportFromData(passportData)
+			passportStream <- passport
+			passportData = []string{}
+			continue
+		}
+	}
+	passport := PassportFromData(passportData)
+	passportStream <- passport
+	close(passportStream)
+	wg.Wait()
+
+	fmt.Printf("solution for part 1: %d\n", validPassports)
+	fmt.Printf("solution for part 2: %d\n", strictValidPassports)
+}
+
+func StreamValid(passport <-chan Passport, valid, strictValid chan<- int) {
+	for pass := range passport {
+		if pass.IsValid() {
+			valid <- 1
+		} else {
+			valid <- 0
+		}
+		if pass.IsValidStrict() {
+			strictValid <- 1
+		} else {
+			strictValid <- 0
+		}
+	}
+	close(valid)
+	close(strictValid)
+}
+
+func StreamCount(count *int, mod <-chan int, wg *sync.WaitGroup){
+	defer wg.Done()
+	for m := range mod {
+		*count += m
+	}
+}
 
 type Passport struct {
 	byr, iyr, eyr int
@@ -146,42 +211,4 @@ func (p *Passport) IsValidStrict() bool {
 		return false
 	}
 	return true
-}
-
-func main() {
-	input := helpers.OpenFile("../inputs/day04/input.txt")
-	defer input.Close()
-
-	passports := []Passport{}
-
-	scanner := bufio.NewScanner(input)
-	passportData := []string{}
-	for scanner.Scan() {
-		line := scanner.Text()
-		fields := strings.Split(line, " ")
-		passportData = append(passportData, fields...)
-		if line == "" {
-			passport := PassportFromData(passportData)
-			passports = append(passports, passport)
-			passportData = []string{}
-			continue
-		}
-	}
-	passport := PassportFromData(passportData)
-	passports = append(passports, passport)
-
-	validPassports := 0
-	validStrictPassports := 0
-
-	for _, pass := range passports {
-		if pass.IsValid() {
-			validPassports += 1
-		}
-		if pass.IsValidStrict() {
-			validStrictPassports += 1
-		}
-	}
-
-	fmt.Printf("solution for part 1: %d\n", validPassports)
-	fmt.Printf("solution for part 2: %d\n", validStrictPassports)
 }
