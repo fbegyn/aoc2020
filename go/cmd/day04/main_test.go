@@ -15,7 +15,7 @@ func BenchmarkPart1(b *testing.B) {
 	defer input.Close()
 
 	for i := 0; i < b.N; i++ {
-		passports := []Passport{}
+		validPassports := 0
 
 		scanner := bufio.NewScanner(input)
 		passportData := []string{}
@@ -25,20 +25,16 @@ func BenchmarkPart1(b *testing.B) {
 			passportData = append(passportData, fields...)
 			if line == "" {
 				passport := PassportFromData(passportData)
-				passports = append(passports, passport)
+				if passport.IsValidStrict() {
+					validPassports += 1
+				}
 				passportData = []string{}
 				continue
 			}
 		}
 		passport := PassportFromData(passportData)
-		passports = append(passports, passport)
-
-		validPassports := 0
-
-		for _, pass := range passports {
-			if pass.IsValid() {
-				validPassports += 1
-			}
+		if passport.IsValid() {
+			validPassports += 1
 		}
 	}
 }
@@ -83,7 +79,7 @@ func BenchmarkPart2(b *testing.B) {
 	defer input.Close()
 
 	for i := 0; i < b.N; i++ {
-		passports := []Passport{}
+		validStrictPassports := 0
 
 		scanner := bufio.NewScanner(input)
 		passportData := []string{}
@@ -93,20 +89,16 @@ func BenchmarkPart2(b *testing.B) {
 			passportData = append(passportData, fields...)
 			if line == "" {
 				passport := PassportFromData(passportData)
-				passports = append(passports, passport)
+				if passport.IsValidStrict() {
+					validStrictPassports += 1
+				}
 				passportData = []string{}
 				continue
 			}
 		}
 		passport := PassportFromData(passportData)
-		passports = append(passports, passport)
-
-		validStrictPassports := 0
-
-		for _, pass := range passports {
-			if pass.IsValidStrict() {
-				validStrictPassports += 1
-			}
+		if passport.IsValidStrict() {
+			validStrictPassports += 1
 		}
 	}
 }
