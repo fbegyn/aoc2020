@@ -2,13 +2,15 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/fbegyn/aoc2020/go/helpers"
 	"errors"
 )
 
 func main() {
-	input := helpers.OpenFile("../inputs/day01/input.txt")
+	file := os.Args[1]
+	input := helpers.OpenFile(file)
 	defer input.Close()
 
 	expenses, err  := helpers.LinesToInts(input)

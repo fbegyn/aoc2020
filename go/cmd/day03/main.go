@@ -4,6 +4,7 @@ import (
 	"bufio"
 
 	"log"
+	"os"
 
 	"github.com/fbegyn/aoc2020/go/helpers"
 )
@@ -14,7 +15,8 @@ type Point struct {
 }
 
 func main() {
-	input := helpers.OpenFile("../inputs/day03/input.txt")
+	file := os.Args[1]
+	input := helpers.OpenFile(file)
 	defer input.Close()
 
 	routeMap := [][]rune{}

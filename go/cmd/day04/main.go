@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"sync"
+	"os"
 
 	"bufio"
 	"strings"
@@ -15,7 +16,8 @@ import (
 )
 
 func main() {
-	input := helpers.OpenFile("../inputs/day04/input.txt")
+	file := os.Args[1]
+	input := helpers.OpenFile(file)
 	defer input.Close()
 
 	passportStream := make(chan Passport)

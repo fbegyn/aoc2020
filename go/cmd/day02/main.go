@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"log"
 	"regexp"
+	"os"
 )
 
 type PasswordRule struct {
@@ -80,7 +81,8 @@ func (r *PasswordRule) ValidToboggan(p string) bool {
 }
 
 func main() {
-	input := helpers.OpenFile("../inputs/day02/input.txt")
+	file := os.Args[1]
+	input := helpers.OpenFile(file)
 	defer input.Close()
 
 	validSledPassword := 0
