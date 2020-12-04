@@ -2,92 +2,150 @@ package main
 
 import (
 	"bufio"
-	"regexp"
 	"testing"
+
+	"strings"
+	"sync"
 
 	"github.com/fbegyn/aoc2020/go/helpers"
 )
 
 func BenchmarkPart1(b *testing.B) {
-	input := helpers.OpenFile("../../../inputs/day02/input.txt")
+	input := helpers.OpenFile("../../../inputs/day04/input.txt")
 	defer input.Close()
 
-	validSledPassword := 0
-
-	scanner := bufio.NewScanner(input)
 	for i := 0; i < b.N; i++ {
+		passports := []Passport{}
+
+		scanner := bufio.NewScanner(input)
+		passportData := []string{}
 		for scanner.Scan() {
 			line := scanner.Text()
+			fields := strings.Split(line, " ")
+			passportData = append(passportData, fields...)
+			if line == "" {
+				passport := PassportFromData(passportData)
+				passports = append(passports, passport)
+				passportData = []string{}
+				continue
+			}
+		}
+		passport := PassportFromData(passportData)
+		passports = append(passports, passport)
 
-			rule, password := PasswordRuleFromLine(line)
+		validPassports := 0
 
-			if rule.ValidSled(password) {
-				validSledPassword += 1
+		for _, pass := range passports {
+			if pass.IsValid() {
+				validPassports += 1
 			}
 		}
 	}
 }
 
-func BenchmarkPart1Regex(b *testing.B) {
-	input := helpers.OpenFile("../../../inputs/day02/input.txt")
+func BenchmarkPart1Stream(b *testing.B) {
+	input := helpers.OpenFile("../../../inputs/day04/input.txt")
 	defer input.Close()
 
-	validSledPassword := 0
+	passportStream := make(chan Passport)
+	validStream := make(chan int)
+	validPassports := 0
 
-	regex := regexp.MustCompile("(\\d+)-(\\d+) ([a-z]): ([a-z]+)$")
+	var wg sync.WaitGroup
+
+	go StreamValidPart1(passportStream, validStream)
+	wg.Add(1)
+	go StreamCount(&validPassports, validStream, &wg)
 
 	scanner := bufio.NewScanner(input)
 	for i := 0; i < b.N; i++ {
+		passportData := []string{}
 		for scanner.Scan() {
 			line := scanner.Text()
-
-			rule, password := PasswordRuleFromLineRegex(line, regex)
-
-			if rule.ValidSled(password) {
-				validSledPassword += 1
+			fields := strings.Split(line, " ")
+			passportData = append(passportData, fields...)
+			if line == "" {
+				passport := PassportFromData(passportData)
+				passportStream <- passport
+				passportData = []string{}
+				continue
 			}
 		}
+		passport := PassportFromData(passportData)
+		passportStream <- passport
 	}
+	close(passportStream)
+	wg.Wait()
 }
 
 func BenchmarkPart2(b *testing.B) {
-	input := helpers.OpenFile("../../../inputs/day02/input.txt")
+	input := helpers.OpenFile("../../../inputs/day04/input.txt")
 	defer input.Close()
 
-	validTobogganPassword := 0
-
-	scanner := bufio.NewScanner(input)
 	for i := 0; i < b.N; i++ {
+		passports := []Passport{}
+
+		scanner := bufio.NewScanner(input)
+		passportData := []string{}
 		for scanner.Scan() {
 			line := scanner.Text()
+			fields := strings.Split(line, " ")
+			passportData = append(passportData, fields...)
+			if line == "" {
+				passport := PassportFromData(passportData)
+				passports = append(passports, passport)
+				passportData = []string{}
+				continue
+			}
+		}
+		passport := PassportFromData(passportData)
+		passports = append(passports, passport)
 
-			rule, password := PasswordRuleFromLine(line)
+		validStrictPassports := 0
 
-			if rule.ValidToboggan(password) {
-				validTobogganPassword += 1
+		for _, pass := range passports {
+			if pass.IsValidStrict() {
+				validStrictPassports += 1
 			}
 		}
 	}
 }
 
-func BenchmarkPart2Regex(b *testing.B) {
-	input := helpers.OpenFile("../../../inputs/day02/input.txt")
+func BenchmarkPart2Stream(b *testing.B) {
+	input := helpers.OpenFile("../../../inputs/day04/input.txt")
 	defer input.Close()
 
-	validTobogganPassword := 0
+	passportStream := make(chan Passport)
+	validStream := make(chan int)
+	strictValidStream := make(chan int)
+	validPassports := 0
+	strictValidPassports := 0
 
-	regex := regexp.MustCompile("(\\d+)-(\\d+) ([a-z]): ([a-z]+)$")
+	var wg sync.WaitGroup
+
+	go StreamValid(passportStream, validStream, strictValidStream)
+	wg.Add(1)
+	go StreamCount(&validPassports, validStream, &wg)
+	wg.Add(1)
+	go StreamCount(&strictValidPassports, strictValidStream, &wg)
 
 	scanner := bufio.NewScanner(input)
 	for i := 0; i < b.N; i++ {
+		passportData := []string{}
 		for scanner.Scan() {
 			line := scanner.Text()
-
-			rule, password := PasswordRuleFromLineRegex(line, regex)
-
-			if rule.ValidToboggan(password) {
-				validTobogganPassword += 1
+			fields := strings.Split(line, " ")
+			passportData = append(passportData, fields...)
+			if line == "" {
+				passport := PassportFromData(passportData)
+				passportStream <- passport
+				passportData = []string{}
+				continue
 			}
 		}
+		passport := PassportFromData(passportData)
+		passportStream <- passport
 	}
+	close(passportStream)
+	wg.Wait()
 }

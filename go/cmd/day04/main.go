@@ -54,6 +54,17 @@ func main() {
 	fmt.Printf("solution for part 2: %d\n", strictValidPassports)
 }
 
+func StreamValidPart1(passport <-chan Passport, valid chan<- int) {
+	for pass := range passport {
+		if pass.IsValid() {
+			valid <- 1
+		} else {
+			valid <- 0
+		}
+	}
+	close(valid)
+}
+
 func StreamValid(passport <-chan Passport, valid, strictValid chan<- int) {
 	for pass := range passport {
 		if pass.IsValid() {
