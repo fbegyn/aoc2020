@@ -108,6 +108,24 @@ func Max(m map[string]int) (ind string) {
 	return
 }
 
+func BinaryParse(input string, lower, upper int, output chan<- int) {
+	for _, r := range input {
+		switch r {
+		case 'F':
+			upper = lower + (upper - lower) / 2
+		case 'B':
+			lower = lower + (upper -lower) / 2 +1
+		case 'L':
+			upper = lower + (upper - lower) / 2
+		case 'R':
+			lower = lower + (upper -lower) / 2 +1
+		}
+	}
+	if upper == lower {
+	    output <- upper
+	}
+}
+
 // RunProgram this is a basic machine code interpreter
 func RunProgram(program []int64, input <-chan int64, output chan<- int64, halt chan<- bool) {
 	mem := make([]int64, len(program))
