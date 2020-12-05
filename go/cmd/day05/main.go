@@ -4,7 +4,6 @@ import (
 	"os"
 	"strconv"
 	"log"
-	"bufio"
 	"strings"
 	"sort"
 
@@ -13,14 +12,12 @@ import (
 
 func main() {
 	file := os.Args[1]
-	input := helpers.OpenFile(file)
-	defer input.Close()
+	input := make(chan string, 5)
+	go helpers.StreamLines(file, input)
 
 	ids := []int{}
-	
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
+
+	for line := range input {
 		line = strings.ReplaceAll(line, "F", "0")
 		line = strings.ReplaceAll(line, "B", "1")
 		line = strings.ReplaceAll(line, "L", "0")
@@ -47,3 +44,20 @@ func main() {
 	log.Printf("solution for part 2: %d\n", mySeat)
 }
 
+func BinaryParse(input string, lower, upper int, output chan<- int) {
+	for _, r := range input {
+		switch r {
+		case 'F':
+			upper = lower + (upper - lower) / 2
+		case 'B':
+			lower = lower + (upper -lower) / 2 +1
+		case 'L':
+			upper = lower + (upper - lower) / 2
+		case 'R':
+			lower = lower + (upper -lower) / 2 +1
+		}
+	}
+	if upper == lower {
+		output <- upper
+	}
+}

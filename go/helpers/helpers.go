@@ -18,6 +18,38 @@ func OpenFile(f string) (file *os.File) {
 	return
 }
 
+func StreamLines(file string, output chan<- string){
+	input := OpenFile(file)
+	defer input.Close()
+	scanner := bufio.NewScanner(input)
+	for scanner.Scan() {
+		output<-scanner.Text()
+	}
+	close(output)
+}
+
+func StreamStrings(file string, output chan<- string){
+	input := OpenFile(file)
+	defer input.Close()
+	scanner := bufio.NewScanner(input)
+	scanner.Split(bufio.ScanWords)
+	for scanner.Scan() {
+		output<-scanner.Text()
+	}
+	close(output)
+}
+
+func StreamRunes(file string, output chan<- rune){
+	input := OpenFile(file)
+	defer input.Close()
+	scanner := bufio.NewScanner(input)
+	scanner.Split(bufio.ScanRunes)
+	for scanner.Scan() {
+		output<-[]rune(scanner.Text())[0]
+	}
+	close(output)
+}
+
 // SumOfFloat64Array sums all float64 in the array
 func SumOfFloat64Array(test []float64) (result float64) {
 	for _, v := range test {
@@ -106,24 +138,6 @@ func Max(m map[string]int) (ind string) {
 		}
 	}
 	return
-}
-
-func BinaryParse(input string, lower, upper int, output chan<- int) {
-	for _, r := range input {
-		switch r {
-		case 'F':
-			upper = lower + (upper - lower) / 2
-		case 'B':
-			lower = lower + (upper -lower) / 2 +1
-		case 'L':
-			upper = lower + (upper - lower) / 2
-		case 'R':
-			lower = lower + (upper -lower) / 2 +1
-		}
-	}
-	if upper == lower {
-	    output <- upper
-	}
 }
 
 // RunProgram this is a basic machine code interpreter
