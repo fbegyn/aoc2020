@@ -1,12 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"os"
+	"strconv"
+	"log"
+	"bufio"
+	"strings"
+	"sort"
 
 	"github.com/fbegyn/aoc2020/go/helpers"
-	"bufio"
-	"sort"
 )
 
 func main() {
@@ -14,37 +16,34 @@ func main() {
 	input := helpers.OpenFile(file)
 	defer input.Close()
 
-	seats := []int{}
+	ids := []int{}
 	
 	scanner := bufio.NewScanner(input)
-		rowStream := make(chan int, 2)
-		colStream := make(chan int, 2)
-
 	for scanner.Scan() {
 		line := scanner.Text()
-		rows := line[:7]
-		cols := line[7:]
-
-		go helpers.BinaryParse(rows, 0, 127, rowStream)
-		go helpers.BinaryParse(cols, 0, 7, colStream)
-
-		seatID := <-rowStream * 8 + <-colStream
-		seats = append(seats, seatID)
+		line = strings.ReplaceAll(line, "F", "0")
+		line = strings.ReplaceAll(line, "B", "1")
+		line = strings.ReplaceAll(line, "L", "0")
+		line = strings.ReplaceAll(line, "R", "1")
+		ID, err := strconv.ParseInt(line, 2, 32)
+		if err != nil {
+			log.Fatalf("failed to parse ID: %v", err)
+		}
+		ids = append(ids, int(ID))
 	}
 
-	close(rowStream)
-	close(colStream)
+	// part 1
+	sort.Ints(ids)
 
-	sort.Ints(seats)
-	mySeat := 0
-	for ind, seat := range seats {
-		if seat+1 != seats[ind+1] {
-			mySeat = seat + 1
+	// part 2
+	var mySeat int
+	for ind := range ids {
+		if mySeat =ids[ind]+1; mySeat != ids[ind+1] {
 			break
 		}
 	}
 
-	fmt.Printf("solution for part 1 is: %d\n", seats[len(seats)-1])
-	fmt.Printf("solution for part 2 is: %d\n", mySeat)
+	log.Printf("solution for part 1: %d\n", ids[len(ids)-1])
+	log.Printf("solution for part 2: %d\n", mySeat)
 }
 
