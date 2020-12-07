@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"strconv"
 	"os"
+	"strings"
 )
 
 // OpenFile well, it opens a file based on a path :p
@@ -140,210 +141,63 @@ func Max(m map[string]int) (ind string) {
 	return
 }
 
-// RunProgram this is a basic machine code interpreter
-func RunProgram(program []int64, input <-chan int64, output chan<- int64, halt chan<- bool) {
-	mem := make([]int64, len(program))
-	copy(mem, program)
-	pc, relBase := int64(0), int64(0)
+func RunProgram(prog []string, output chan<- int, halt, loop chan<- bool) {
+	mem := make([]string, len(prog))
+	copy(mem, prog)
 
-	for {
-		opcode := mem[pc] % 100
-		modesNumber := mem[pc] / 100
-		modes := make([]int64, 3)
-		i := 0
-		for modesNumber > 0 {
-			modes[i] = modesNumber % 10
-			modesNumber /= 10
-			i += 1
+	instrFreq := make(map[uint]uint)
+
+	pc := uint(0)
+	acc := 0
+	looping := false
+
+	for !looping {
+		if uint(len(mem)) <= pc {
+			halt <- true
+			output <- acc
+			break
 		}
-		switch opcode {
-		case 1:
-			params := getParam(mem[pc:], 3)
-			opA := params[0]
-			opB := params[1]
-			dest := params[2]
-			switch modes[0] {
-			case 0:
-				opA = mem[opA]
-			case 2:
-				opA = mem[relBase+opA]
+
+		if fr, _ := instrFreq[pc]; 0 < fr {
+			looping = true
+			loop <- looping
+			output <- acc
+		}
+
+		instruction := mem[pc]
+		opcode := strings.Split(instruction, " ")
+		instrFreq[pc] += 1
+		switch opcode[0] {
+		case "acc":
+			arg, err := strconv.Atoi(opcode[1])
+			if err != nil {
+				log.Fatalf("failed to parse arg: %v", err)
 			}
-			switch modes[1] {
-			case 0:
-				opB = mem[opB]
-			case 2:
-				opB = mem[relBase+opB]
+			acc += arg
+			pc += 1
+		case "jmp":
+			arg, err := strconv.Atoi(opcode[1])
+			if err != nil {
+				log.Fatalf("failed to parse arg: %v", err)
 			}
-			switch modes[2] {
-			case 2:
-				dest = relBase + dest
-			}
-			mem[dest] = opA + opB
-			pc += 4
-		case 2:
-			params := getParam(mem[pc:], 3)
-			opA := params[0]
-			opB := params[1]
-			dest := params[2]
-			switch modes[0] {
-			case 0:
-				opA = mem[opA]
-			case 2:
-				opA = mem[relBase+opA]
-			}
-			switch modes[1] {
-			case 0:
-				opB = mem[opB]
-			case 2:
-				opB = mem[relBase+opB]
-			}
-			switch modes[2] {
-			case 2:
-				dest = relBase + dest
-			}
-			mem[dest] = opA * opB
-			pc += 4
-		case 3:
-			params := getParam(mem[pc:], 1)
-			dest := params[0]
-			switch modes[0] {
-			case 2:
-				dest = relBase + dest
-			}
-			mem[dest] = <-input
-			pc += 2
-		case 4:
-			params := getParam(mem[pc:], 1)
-			out := params[0]
-			switch modes[0] {
-			case 0:
-				out = mem[out]
-			case 2:
-				out = mem[relBase+out]
-			}
-			output <- out
-			pc += 2
-		case 5:
-			params := getParam(mem[pc:], 2)
-			opA := params[0]
-			opB := params[1]
-			switch modes[0] {
-			case 0:
-				opA = mem[opA]
-			case 2:
-				opA = mem[relBase+opA]
-			}
-			switch modes[1] {
-			case 0:
-				opB = mem[opB]
-			case 2:
-				opB = mem[relBase+opB]
-			}
-			if opA != 0 {
-				pc += opB - pc
-			} else {
-				pc += 3
-			}
-		case 6:
-			params := getParam(mem[pc:], 2)
-			opA := params[0]
-			opB := params[1]
-			switch modes[0] {
-			case 0:
-				opA = mem[opA]
-			case 2:
-				opA = mem[relBase+opA]
-			}
-			switch modes[1] {
-			case 0:
-				opB = mem[opB]
-			case 2:
-				opB = mem[relBase+opB]
-			}
-			if opA == 0 {
-				pc += opB - pc
-			} else {
-				pc += 3
-			}
-		case 7:
-			params := getParam(mem[pc:], 3)
-			opA := params[0]
-			opB := params[1]
-			dest := params[2]
-			switch modes[0] {
-			case 0:
-				opA = mem[opA]
-			case 2:
-				opA = mem[relBase+opA]
-			}
-			switch modes[1] {
-			case 0:
-				opB = mem[opB]
-			case 2:
-				opB = mem[relBase+opB]
-			}
-			switch modes[2] {
-			case 2:
-				dest = relBase + dest
-			}
-			if opA < opB {
-				mem[dest] = 1
-			} else {
-				mem[dest] = 0
-			}
-			pc += 4
-		case 8:
-			params := getParam(mem[pc:], 3)
-			opA := params[0]
-			opB := params[1]
-			dest := params[2]
-			switch modes[0] {
-			case 0:
-				opA = mem[opA]
-			case 2:
-				opA = mem[relBase+opA]
-			}
-			switch modes[1] {
-			case 0:
-				opB = mem[opB]
-			case 2:
-				opB = mem[relBase+opB]
-			}
-			switch modes[2] {
-			case 2:
-				dest = relBase + dest
-			}
-			if opA == opB {
-				mem[dest] = 1
-			} else {
-				mem[dest] = 0
-			}
-			pc += 4
-		case 9:
-			params := getParam(mem[pc:], 1)
-			opA := params[0]
-			switch modes[0] {
-			case 0:
-				opA = mem[opA]
-			case 2:
-				opA = mem[relBase+opA]
-			}
-			relBase += opA
-			pc += 2
-		case 99:
-			halt <- true
-		default:
-			halt <- true
+			pc += uint(arg)
+		case "nop":
+			pc += 1
 		}
 	}
 }
 
-func getParam(program []int64, param int64) []int64 {
-	params := make([]int64, param)
-	for i := int64(0); i < param; i++ {
-		params[i] = program[i+1]
+func ToggleInstruction(prog []string, ind int) []string {
+	change := make([]string, len(prog))
+	copy(change, prog)
+	instr := change[ind]
+	switch strings.Split(instr, " ")[0] {
+	case "jmp":
+		change[ind] = strings.ReplaceAll(change[ind], "jmp", "nop")
+	case "nop":
+		change[ind] = strings.ReplaceAll(change[ind], "nop", "jmp")
 	}
-	return params
+	return change
 }
 
 type Point struct {
