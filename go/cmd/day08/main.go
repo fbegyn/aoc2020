@@ -41,14 +41,10 @@ func main() {
 	for _, ch := range changes {
 		fix := helpers.ToggleInstruction(instructions, ch)
 		go helpers.RunProgram(fix, output, halt, loop)
+	}
 
-		select {
-		case <-loop:
-			<-output // need to unblock the output channel
-			continue
-		case <-halt:
-			log.Printf("solution to part 2: %d", <-output)
-			break
-		}
+	select {
+	case <-halt:
+		log.Printf("solution to part 2: %d", <-output)
 	}
 }
