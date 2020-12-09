@@ -28,6 +28,15 @@ func main() {
 		in = append(in, number)
 	}
 
+	invalid := part1(in, preambleSize)
+	indexLow, indexHigh := part2(in, invalid)
+	sort.Ints(in[indexLow:indexHigh])
+
+	log.Printf("solution to part 1: %d", invalid)
+	log.Printf("solution to part 2: %d", in[indexLow]+in[indexHigh-1])
+}
+
+func part1(in []int, preambleSize int) int {
 	invalid := 0
 	index := 0
 	for invalid == 0 && index+preambleSize < len(in) {
@@ -38,8 +47,7 @@ func main() {
 		max := preamble[preambleSize-1]+preamble[preambleSize-2]
 		nr := in[index+preambleSize]
 		if nr < min || max < nr {
-			invalid = nr
-			continue
+			return nr
 		}
 		sum := false
 		for i, a := range preamble {
@@ -51,28 +59,22 @@ func main() {
 			}
 		}
 		if !sum {
-			invalid = nr
-			continue
+			return nr
 		}
 		index += 1
 	}
+	return invalid
+}
 
-	indexLow, indexHigh := 0, 0
+func part2(in []int, invalid int) (int, int) {
 	found := false
 	for i := 2; !found; i++ {
 		for j := range in {
 			if invalid == helpers.SumOfIntArray(in[j:j+i]) {
-				indexLow, indexHigh = j, j+i
 				found = true
-				break
+				return j, j+i
 			}
 		}
 	}
-
-	list := make([]int, indexHigh-indexLow)
-	copy(list, in[indexLow:indexHigh])
-	sort.Ints(list)
-
-	log.Printf("solution to part 1: %d", invalid)
-	log.Printf("solution to part 2: %d", list[0]+list[len(list)-1])
+	return 0,0
 }
