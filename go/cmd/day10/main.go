@@ -36,30 +36,16 @@ func main() {
 		}
 	}
 
-	
+	memo := map[int]int{0: 1}
 
-	for diff, freq := range differences {
-		log.Printf("There are %d differences of %d joltage", freq, diff)
+	for i := 0; i < len(inputs); i++ {
+		for j := 0; j < i; j++ {
+			if inputs[i] - inputs[j] <= 3 {
+				memo[i] += memo[j]
+			}
+		}
 	}
 
 	log.Printf("solution for part 1: %d", differences[1]*differences[3])
-	log.Printf("solution for part 2: %v", Arrange(inputs, 0))
+	log.Printf("solution for part 2: %v", memo)
 }
-
-func Arrange(path []int, ind int) int {
-	if ind >= len(path) {
-		return 1
-	}
-
-	x := path[ind]
-	ans := Arrange(path, ind+1)
-
-	if ind+2 < len(path) && path[ind+2]-x <= 3 {
-		ans += Arrange(path, ind+2)
-		if ind+3 < len(path) && path[ind+3]-x <= 3 {
-			ans += Arrange(path, ind+3)
-		}
-	}
-	return ans
-}
-
