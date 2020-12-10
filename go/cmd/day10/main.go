@@ -15,7 +15,7 @@ func main() {
 	input := make(chan string, 5)
 	go helpers.StreamLines(file, input)
 
-	inputs := []int{}
+	inputs := []int{0}
 	for inp := range input {
 		in, err := strconv.Atoi(inp)
 		if err != nil {
@@ -31,14 +31,14 @@ func main() {
 	joltage := 0
 	for _, rating := range inputs {
 		if joltage < rating && rating <= joltage+3 {
-			differences[rating-joltage] += 1
+			differences[rating-joltage]++
 			joltage = rating
 		}
 	}
 
 	memo := map[int]int{0: 1}
 
-	for i := 0; i < len(inputs); i++ {
+	for i := 1; i < len(inputs); i++ {
 		for j := 0; j < i; j++ {
 			if inputs[i] - inputs[j] <= 3 {
 				memo[i] += memo[j]
