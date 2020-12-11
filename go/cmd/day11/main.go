@@ -24,36 +24,24 @@ func main() {
 	}
 	l := NewLife(m)
 	fmt.Println(l.String())
-	l.Step()
-	fmt.Println(l.String())
-	l.Step()
-	fmt.Println(l.String())
-	l.Step()
-	fmt.Println(l.String())
-	l.Step()
-	fmt.Println(l.String())
-	l.Step()
+	stable := false
+	for !stable {
+		stable = l.Step()
+		fmt.Println(l.String())
+	}
 	fmt.Println(l.String())
 }
 
 type Field struct {
 	m          [][]byte
-	s          [][]bool
 	rows, cols int
 }
 
 func NewField(m [][]byte) *Field {
 	rows := len(m)
 	cols := len(m[0])
-
-	s := make([][]bool, rows)
-	for i := range s {
-		s[i] = make([]bool, rows)
-	}
-
 	return &Field{
 		m:    m,
-		s:    s,
 		rows: rows,
 		cols: cols,
 	}
@@ -68,7 +56,6 @@ func (f *Field) IsSeat(x, y int) bool {
 
 func (f *Field) Set(x, y int, state bool) bool {
 	if f.IsSeat(x, y) {
-		f.s[y][x] = state
 		if state {
 			f.m[y][x] = '#'
 		} else {
@@ -80,7 +67,22 @@ func (f *Field) Set(x, y int, state bool) bool {
 }
 
 func (f *Field) Occupied(x, y int) bool {
-	return f.s[y][x]
+	x += f.cols
+	x %= f.cols
+	y += f.rows
+	y %= f.rows
+	state := f.m[y][x]
+	switch state {
+	case '#':
+		return true
+	case 'L':
+		return false
+	case '.':
+		return false
+	default:
+		fmt.Println("I don't know this state")
+	}
+	return false
 }
 
 func (f *Field) Next(x, y int) int {
