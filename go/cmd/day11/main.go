@@ -40,7 +40,7 @@ func main() {
 type Field struct {
 	m          [][]byte
 	rows, cols int
-	threshold int
+	threshold  int
 }
 
 func NewField(m [][]byte, thresh int) *Field {
@@ -55,9 +55,9 @@ func NewField(m [][]byte, thresh int) *Field {
 	}
 
 	return &Field{
-		m:    mm,
-		rows: rows,
-		cols: cols,
+		m:         mm,
+		rows:      rows,
+		cols:      cols,
 		threshold: thresh,
 	}
 }
@@ -98,17 +98,19 @@ func (f *Field) Occupied(x, y int) bool {
 }
 
 func (f *Field) Next(x, y int) int {
-	if !f.IsSeat(x, y) { return 0 }
+	if !f.IsSeat(x, y) {
+		return 0
+	}
 	occupied := 0
-	for i := -1; i <= 1; i++ {
-		if x+i < 0 || f.cols <= x+i {
-			continue
-		}
-		for j := -1; j <= 1; j++ {
-			if y+j < 0 || f.rows <= y+j {
-				continue
-			}
-			if (j != 0 || i != 0) && f.Occupied(x+i, y+j) {
+	directions := [][2]int{
+		{-1, -1}, {0, -1}, {1, -1},
+		{-1, 0}, {1, 0},
+		{-1, 1}, {0, 1}, {1, 1},
+	}
+	for _, dir := range directions {
+		nx, ny := x+dir[0], y+dir[1]
+		if 0 <= ny && ny < f.rows && 0 <= nx && nx < f.cols {
+			if f.Occupied(nx, ny) {
 				occupied++
 			}
 		}
@@ -124,18 +126,29 @@ func (f *Field) Next(x, y int) int {
 }
 
 func (f *Field) NextPart2(x, y int) int {
-	if !f.IsSeat(x, y) { return 0 }
+	if !f.IsSeat(x, y) {
+		return 0
+	}
 	occupied := 0
-	for i := -1; i <= 1; i++ {
-		if x+i < 0 || f.cols <= x+i {
-			continue
-		}
-		for j := -1; j <= 1; j++ {
-			if y+j < 0 || f.rows <= y+j {
-				continue
-			}
-			if (j != 0 || i != 0) && f.Occupied(x+i, y+j) {
+	directions := [][2]int{
+		{-1, -1}, {0, -1}, {1, -1},
+		{-1, 0}, {1, 0},
+		{-1, 1}, {0, 1}, {1, 1},
+	}
+	for _, dir := range directions {
+		nx, ny := x+dir[0], y+dir[1]
+		steps := 1
+		for 0 <= ny && ny < f.rows && 0 <= nx && nx < f.cols {
+			if f.Occupied(nx, ny) {
 				occupied++
+				break
+			} else {
+				if f.m[ny][nx] == 'L' {
+					break
+				}
+				nx += dir[0]
+				ny += dir[1]
+				steps++
 			}
 		}
 	}
