@@ -22,28 +22,43 @@ func main() {
 		}
 		m = append(m, in)
 	}
-	l := NewLife(m)
-	fmt.Println(l.String())
-	stable := false
-	for !stable {
-		stable = l.Step()
-		fmt.Println(l.String())
+	l := NewLife(m, 4)
+	changed := true
+	for changed {
+		changed = l.Step()
 	}
-	fmt.Println(l.String())
+	fmt.Printf("solution to part 1: %d\n", l.c.CountOccupied())
+
+	l = NewLife(m, 5)
+	changed = true
+	for changed {
+		changed = l.StepPart2()
+	}
+	fmt.Printf("solution to part 2: %d\n", l.c.CountOccupied())
 }
 
 type Field struct {
 	m          [][]byte
 	rows, cols int
+	threshold int
 }
 
-func NewField(m [][]byte) *Field {
+func NewField(m [][]byte, thresh int) *Field {
 	rows := len(m)
 	cols := len(m[0])
+
+	mm := make([][]byte, rows)
+	for r := range m {
+		rr := make([]byte, cols)
+		copy(rr, m[r])
+		mm[r] = rr
+	}
+
 	return &Field{
-		m:    m,
+		m:    mm,
 		rows: rows,
 		cols: cols,
+		threshold: thresh,
 	}
 }
 
@@ -55,14 +70,11 @@ func (f *Field) IsSeat(x, y int) bool {
 }
 
 func (f *Field) Set(x, y int, state bool) bool {
-	if f.IsSeat(x, y) {
-		if state {
-			f.m[y][x] = '#'
-		} else {
-			f.m[y][x] = 'L'
-		}
+	if state {
+		f.m[y][x] = '#'
 		return true
 	}
+	f.m[y][x] = 'L'
 	return false
 }
 
@@ -81,11 +93,12 @@ func (f *Field) Occupied(x, y int) bool {
 		return false
 	default:
 		fmt.Println("I don't know this state")
+		return false
 	}
-	return false
 }
 
 func (f *Field) Next(x, y int) int {
+	if !f.IsSeat(x, y) { return 0 }
 	occupied := 0
 	for i := -1; i <= 1; i++ {
 		if x+i < 0 || f.cols <= x+i {
@@ -93,9 +106,6 @@ func (f *Field) Next(x, y int) int {
 		}
 		for j := -1; j <= 1; j++ {
 			if y+j < 0 || f.rows <= y+j {
-				continue
-			}
-			if !f.IsSeat(x+i, y+j) {
 				continue
 			}
 			if (j != 0 || i != 0) && f.Occupied(x+i, y+j) {
@@ -107,7 +117,33 @@ func (f *Field) Next(x, y int) int {
 	if occupied == 0 && !seatTaken {
 		return 1
 	}
-	if occupied >= 4 && seatTaken {
+	if occupied >= f.threshold && seatTaken {
+		return -1
+	}
+	return 0
+}
+
+func (f *Field) NextPart2(x, y int) int {
+	if !f.IsSeat(x, y) { return 0 }
+	occupied := 0
+	for i := -1; i <= 1; i++ {
+		if x+i < 0 || f.cols <= x+i {
+			continue
+		}
+		for j := -1; j <= 1; j++ {
+			if y+j < 0 || f.rows <= y+j {
+				continue
+			}
+			if (j != 0 || i != 0) && f.Occupied(x+i, y+j) {
+				occupied++
+			}
+		}
+	}
+	seatTaken := f.Occupied(x, y)
+	if occupied == 0 && !seatTaken {
+		return 1
+	}
+	if occupied >= f.threshold && seatTaken {
 		return -1
 	}
 	return 0
@@ -118,11 +154,12 @@ type Life struct {
 	rows, cols int
 }
 
-func NewLife(m [][]byte) *Life {
-	a := NewField(m)
+func NewLife(m [][]byte, thresh int) *Life {
+	a := NewField(m, thresh)
+	b := NewField(m, thresh)
 	return &Life{
 		c:    a,
-		n:    NewField(m),
+		n:    b,
 		rows: len(m),
 		cols: len(m[0]),
 	}
@@ -132,13 +169,43 @@ func (l *Life) Step() bool {
 	change := false
 	for y := 0; y < l.rows; y++ {
 		for x := 0; x < l.cols; x++ {
-			switch l.c.Next(x, y) {
+			switch op := l.c.Next(x, y); op {
 			case 1:
 				l.n.Set(x, y, true)
 				change = true
+				continue
 			case -1:
 				l.n.Set(x, y, false)
 				change = true
+				continue
+			case 0:
+				l.n.m[y][x] = l.c.m[y][x]
+			default:
+				continue
+			}
+		}
+	}
+	l.c, l.n = l.n, l.c
+	return change
+}
+
+func (l *Life) StepPart2() bool {
+	change := false
+	for y := 0; y < l.rows; y++ {
+		for x := 0; x < l.cols; x++ {
+			switch op := l.c.NextPart2(x, y); op {
+			case 1:
+				l.n.Set(x, y, true)
+				change = true
+				continue
+			case -1:
+				l.n.Set(x, y, false)
+				change = true
+				continue
+			case 0:
+				l.n.m[y][x] = l.c.m[y][x]
+			default:
+				continue
 			}
 		}
 	}
@@ -155,4 +222,27 @@ func (l *Life) String() string {
 		buf.WriteByte('\n')
 	}
 	return buf.String()
+}
+
+func (f *Field) String() string {
+	var buf bytes.Buffer
+	for y := 0; y < f.rows; y++ {
+		for x := 0; x < f.cols; x++ {
+			buf.WriteByte(f.m[y][x])
+		}
+		buf.WriteByte('\n')
+	}
+	return buf.String()
+}
+
+func (f *Field) CountOccupied() int {
+	count := 0
+	for y := 0; y < f.rows; y++ {
+		for x := 0; x < f.cols; x++ {
+			if f.m[y][x] == '#' {
+				count++
+			}
+		}
+	}
+	return count
 }
