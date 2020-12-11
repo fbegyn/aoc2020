@@ -14,248 +14,219 @@ func main() {
 	input := make(chan string, 5)
 	go helpers.StreamLines(file, input)
 
-	m := [][]byte{}
+	m := make(map[helpers.Point]rune)
+	rows, cols := 0, 0
 	for inp := range input {
-		in := make([]byte, len(inp))
-		for col, ch := range []byte(inp) {
-			in[col] = ch
+		for col, ch := range inp {
+			p := helpers.NewPoint(int64(col), int64(rows))
+			if cols < col {
+				cols = col
+			}
+			m[*p] = ch
 		}
-		m = append(m, in)
+		rows++
 	}
-	l := NewLife(m, 4)
+	l := NewLife(m, cols, rows, 4)
 	changed := true
 	for changed {
-		changed = l.Step()
+		l, changed = l.Step(false)
 	}
-	fmt.Printf("solution to part 1: %d\n", l.c.CountOccupied())
+	fmt.Printf("solution to part 1: %d\n", l.CountOccupied())
 
-	l = NewLife(m, 5)
+	l = NewLife(m, cols, rows, 5)
 	changed = true
 	for changed {
-		changed = l.StepPart2()
+		l, changed = l.Step(true)
 	}
-	fmt.Printf("solution to part 2: %d\n", l.c.CountOccupied())
-}
+	fmt.Printf("solution to part 2: %d\n", l.CountOccupied())
 
-type Field struct {
-	m          [][]byte
-	rows, cols int
-	threshold  int
-}
-
-func NewField(m [][]byte, thresh int) *Field {
-	rows := len(m)
-	cols := len(m[0])
-
-	mm := make([][]byte, rows)
-	for r := range m {
-		rr := make([]byte, cols)
-		copy(rr, m[r])
-		mm[r] = rr
-	}
-
-	return &Field{
-		m:         mm,
-		rows:      rows,
-		cols:      cols,
-		threshold: thresh,
-	}
-}
-
-func (f *Field) IsSeat(x, y int) bool {
-	if f.m[y][x] != '.' {
-		return true
-	}
-	return false
-}
-
-func (f *Field) Set(x, y int, state bool) bool {
-	if state {
-		f.m[y][x] = '#'
-		return true
-	}
-	f.m[y][x] = 'L'
-	return false
-}
-
-func (f *Field) Occupied(x, y int) bool {
-	x += f.cols
-	x %= f.cols
-	y += f.rows
-	y %= f.rows
-	state := f.m[y][x]
-	switch state {
-	case '#':
-		return true
-	case 'L':
-		return false
-	case '.':
-		return false
-	default:
-		fmt.Println("I don't know this state")
-		return false
-	}
-}
-
-func (f *Field) Next(x, y int) int {
-	if !f.IsSeat(x, y) {
-		return 0
-	}
-	occupied := 0
-	directions := [][2]int{
-		{-1, -1}, {0, -1}, {1, -1},
-		{-1, 0}, {1, 0},
-		{-1, 1}, {0, 1}, {1, 1},
-	}
-	for _, dir := range directions {
-		nx, ny := x+dir[0], y+dir[1]
-		if 0 <= ny && ny < f.rows && 0 <= nx && nx < f.cols {
-			if f.Occupied(nx, ny) {
-				occupied++
-			}
-		}
-	}
-	seatTaken := f.Occupied(x, y)
-	if occupied == 0 && !seatTaken {
-		return 1
-	}
-	if occupied >= f.threshold && seatTaken {
-		return -1
-	}
-	return 0
-}
-
-func (f *Field) NextPart2(x, y int) int {
-	if !f.IsSeat(x, y) {
-		return 0
-	}
-	occupied := 0
-	directions := [][2]int{
-		{-1, -1}, {0, -1}, {1, -1},
-		{-1, 0}, {1, 0},
-		{-1, 1}, {0, 1}, {1, 1},
-	}
-	for _, dir := range directions {
-		nx, ny := x+dir[0], y+dir[1]
-		steps := 1
-		for 0 <= ny && ny < f.rows && 0 <= nx && nx < f.cols {
-			if f.Occupied(nx, ny) {
-				occupied++
-				break
-			} else {
-				if f.m[ny][nx] == 'L' {
-					break
-				}
-				nx += dir[0]
-				ny += dir[1]
-				steps++
-			}
-		}
-	}
-	seatTaken := f.Occupied(x, y)
-	if occupied == 0 && !seatTaken {
-		return 1
-	}
-	if occupied >= f.threshold && seatTaken {
-		return -1
-	}
-	return 0
+	l = NewLife(m, cols, rows, 4)
+	fmt.Println(l.Stabilize(false))
 }
 
 type Life struct {
-	c, n       *Field
-	rows, cols int
+	m                     map[helpers.Point]rune
+	threshold, rows, cols int
 }
 
-func NewLife(m [][]byte, thresh int) *Life {
-	a := NewField(m, thresh)
-	b := NewField(m, thresh)
+func NewLife(m map[helpers.Point]rune, cols, rows, thresh int) *Life {
+	mm := make(map[helpers.Point]rune, cols*rows)
+	for k, v := range m {
+		mm[k] = v
+	}
 	return &Life{
-		c:    a,
-		n:    b,
-		rows: len(m),
-		cols: len(m[0]),
+		m:         mm,
+		threshold: thresh,
+		rows:      rows,
+		cols:      cols,
 	}
 }
 
-func (l *Life) Step() bool {
-	change := false
-	for y := 0; y < l.rows; y++ {
-		for x := 0; x < l.cols; x++ {
-			switch op := l.c.Next(x, y); op {
-			case 1:
-				l.n.Set(x, y, true)
-				change = true
-				continue
-			case -1:
-				l.n.Set(x, y, false)
-				change = true
-				continue
-			case 0:
-				l.n.m[y][x] = l.c.m[y][x]
-			default:
-				continue
-			}
-		}
+func (l *Life) IsSeat(p helpers.Point) bool {
+	if l.m[p] != '.' {
+		return true
 	}
-	l.c, l.n = l.n, l.c
-	return change
+	return false
 }
 
-func (l *Life) StepPart2() bool {
-	change := false
-	for y := 0; y < l.rows; y++ {
-		for x := 0; x < l.cols; x++ {
-			switch op := l.c.NextPart2(x, y); op {
-			case 1:
-				l.n.Set(x, y, true)
-				change = true
-				continue
-			case -1:
-				l.n.Set(x, y, false)
-				change = true
-				continue
-			case 0:
-				l.n.m[y][x] = l.c.m[y][x]
-			default:
-				continue
+func (l *Life) Set(p helpers.Point, state bool) bool {
+	if state {
+		l.m[p] = '#'
+		return true
+	}
+	l.m[p] = 'L'
+	return false
+}
+
+func (l *Life) Occupied(p helpers.Point) bool {
+	state, ok := l.m[p]
+	if ok {
+		switch state {
+		case '#':
+			return true
+		case 'L':
+			return false
+		case '.':
+			return false
+		default:
+			fmt.Println("I don't know this state")
+			return false
+		}
+	}
+	fmt.Println("This point does not exist")
+	return false
+}
+
+func (l *Life) Next(p helpers.Point, view bool) (int, int) {
+	if !l.IsSeat(p) {
+		return 0, 0
+	}
+	occupied := 0
+	directions := [][2]int64{
+		{-1, -1}, {0, -1}, {1, -1},
+		{-1, 0}, {1, 0},
+		{-1, 1}, {0, 1}, {1, 1},
+	}
+	for _, dir := range directions {
+		point := p
+		point.Move(dir)
+		ch, ok := l.m[point]
+		for ok {
+			if l.Occupied(point) {
+				occupied++
+				if view {
+					break
+				}
+			}
+			if view {
+				if ch == 'L' {
+					break
+				}
+				point.Move(dir)
+				ch, ok = l.m[point]
+			} else {
+				break
 			}
 		}
 	}
-	l.c, l.n = l.n, l.c
-	return change
+	seatTaken := l.Occupied(p)
+	//fmt.Printf("point: %v -> occupied: %d - taken: %v\n", p, occupied, seatTaken)
+	if occupied == 0 && !seatTaken {
+		return 1, occupied
+	}
+	if occupied >= l.threshold && seatTaken {
+		return -1, occupied
+	}
+	return 0, 0
+}
+
+func (l *Life) Step(view bool) (*Life, bool) {
+	new := &Life{
+		m:         make(map[helpers.Point]rune, l.rows*l.cols),
+		threshold: l.threshold,
+		rows:      l.rows,
+		cols:      l.cols,
+	}
+	change := false
+	for point, ch := range l.m {
+		switch op, _ := l.Next(point, view); op {
+		case 1:
+			new.Set(point, true)
+			change = true
+			continue
+		case -1:
+			new.Set(point, false)
+			change = true
+			continue
+		case 0:
+			new.m[point] = ch
+		default:
+			continue
+		}
+	}
+	return new, change
 }
 
 func (l *Life) String() string {
 	var buf bytes.Buffer
-	for y := 0; y < l.rows; y++ {
-		for x := 0; x < l.cols; x++ {
-			buf.WriteByte(l.c.m[y][x])
+	for y := 0; y <= l.rows; y++ {
+		for x := 0; x <= l.cols; x++ {
+			point := helpers.NewPoint(int64(x), int64(y))
+			buf.WriteRune(l.m[*point])
 		}
 		buf.WriteByte('\n')
 	}
 	return buf.String()
 }
 
-func (f *Field) String() string {
-	var buf bytes.Buffer
-	for y := 0; y < f.rows; y++ {
-		for x := 0; x < f.cols; x++ {
-			buf.WriteByte(f.m[y][x])
-		}
-		buf.WriteByte('\n')
-	}
-	return buf.String()
-}
-
-func (f *Field) CountOccupied() int {
+func (l *Life) CountOccupied() int {
 	count := 0
-	for y := 0; y < f.rows; y++ {
-		for x := 0; x < f.cols; x++ {
-			if f.m[y][x] == '#' {
-				count++
-			}
+	for _, r := range l.m {
+		if r == '#' {
+			count++
 		}
 	}
 	return count
+}
+
+func (l *Life) Stabilize(view bool) int {
+	new := &Life{
+		m:         make(map[helpers.Point]rune, l.rows*l.cols),
+		threshold: l.threshold,
+		rows:      l.rows,
+		cols:      l.cols,
+	}
+	check := map[helpers.Point]struct{}{}
+	for k, v := range l.m {
+		if v == '.' {
+			new.m[k] = v
+			continue
+		}
+		check[k] = struct{}{}
+	}
+
+	fmt.Println(l.m)
+	for 0 < len(check) {
+		add := make(map[helpers.Point]rune, l.cols*l.rows)
+		permOcc, permEmp := 0,0
+		for k := range check {
+			switch op, occ := l.Next(k, view); op {
+			case 1:
+				if occ != 0 {
+					continue
+				}
+				add[k] = '#'
+				delete(check, k)
+			case -1:
+				if occ > 0 {
+					add[k] = 'L'
+					delete(check, k)
+				}
+			}
+		}
+		for k, v := range add {
+			new.m[k] = v
+		}
+	}
+	return new.CountOccupied()
 }
