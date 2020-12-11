@@ -1,6 +1,8 @@
 package helpers
 
 import (
+
+
 	"fmt"
 	"log"
 	"math"
@@ -201,11 +203,14 @@ func ToggleInstruction(prog []string, ind int) []string {
 }
 
 type Point struct {
-	x int64
-	y int64
+	x, y int64
 }
 
-func (p *Point) Move(n [3]int64) {
+func NewPoint(x, y int64) *Point {
+	return &Point{x, y}
+}
+
+func (p *Point) Move(n [2]int64) {
 	p.x += n[0]
 	p.y += n[1]
 }
