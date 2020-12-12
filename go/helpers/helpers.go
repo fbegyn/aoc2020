@@ -215,7 +215,7 @@ func (p *Point) Move(n [2]int64) {
 	p.y += n[1]
 }
 
-func (p Point) Angle(t Point) (angle float64) {
+func (p *Point) Angle(t Point) (angle float64) {
 	angle = math.Atan2(float64(t.x-p.x), float64(t.y-p.y)) * 180 / math.Pi
 	if angle < 0 {
 		angle += 360
@@ -223,7 +223,7 @@ func (p Point) Angle(t Point) (angle float64) {
 	return
 }
 
-func (p Point) ManhattanDist(t Point) int64 {
+func (p *Point) ManhattanDist(t Point) int64 {
 	return Abs(p.x-t.x) + Abs(p.y-t.y)
 }
 
