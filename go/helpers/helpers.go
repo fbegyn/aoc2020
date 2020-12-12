@@ -1,14 +1,12 @@
 package helpers
 
 import (
-
-
+	"bufio"
 	"fmt"
 	"log"
 	"math"
-	"bufio"
-	"strconv"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -21,34 +19,34 @@ func OpenFile(f string) (file *os.File) {
 	return
 }
 
-func StreamLines(file string, output chan<- string){
+func StreamLines(file string, output chan<- string) {
 	input := OpenFile(file)
 	defer input.Close()
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
-		output<-scanner.Text()
+		output <- scanner.Text()
 	}
 	close(output)
 }
 
-func StreamStrings(file string, output chan<- string){
+func StreamStrings(file string, output chan<- string) {
 	input := OpenFile(file)
 	defer input.Close()
 	scanner := bufio.NewScanner(input)
 	scanner.Split(bufio.ScanWords)
 	for scanner.Scan() {
-		output<-scanner.Text()
+		output <- scanner.Text()
 	}
 	close(output)
 }
 
-func StreamRunes(file string, output chan<- rune){
+func StreamRunes(file string, output chan<- rune) {
 	input := OpenFile(file)
 	defer input.Close()
 	scanner := bufio.NewScanner(input)
 	scanner.Split(bufio.ScanRunes)
 	for scanner.Scan() {
-		output<-[]rune(scanner.Text())[0]
+		output <- []rune(scanner.Text())[0]
 	}
 	close(output)
 }
@@ -215,12 +213,57 @@ func (p *Point) Move(n [2]int64) {
 	p.y += n[1]
 }
 
+func (p *Point) MoveDir(dir rune) {
+	switch {
+	case dir == 'N' || dir == 'U':
+		p.Move([2]int64{0, 1})
+	case dir == 'S' || dir == 'D':
+		p.Move([2]int64{0, -1})
+	case dir == 'E' || dir == 'R':
+		p.Move([2]int64{1, 0})
+	case dir == 'W' || dir == 'L':
+		p.Move([2]int64{-1, 0})
+	}
+}
+
+func (p *Point) MoveDirN(dir rune, steps int64) {
+	switch {
+	case dir == 'N' || dir == 'U':
+		p.Move([2]int64{0, steps})
+	case dir == 'S' || dir == 'D':
+		p.Move([2]int64{0, -1 * steps})
+	case dir == 'E' || dir == 'R':
+		p.Move([2]int64{steps, 0})
+	case dir == 'W' || dir == 'L':
+		p.Move([2]int64{-1 * steps, 0})
+	}
+}
+
+func (p *Point) MoveRelative(n *Point) {
+	p.Move([2]int64{n.x, n.y})
+}
+
+func (p *Point) MoveRelativeN(n *Point, times int64) {
+	p.Move([2]int64{
+		times * (n.x),
+		times * (n.y),
+	})
+}
+
 func (p *Point) Angle(t Point) (angle float64) {
 	angle = math.Atan2(float64(t.x-p.x), float64(t.y-p.y)) * 180 / math.Pi
 	if angle < 0 {
 		angle += 360
 	}
 	return
+}
+
+func (p *Point) Rotate90(cc bool) {
+	if cc {
+		p.x, p.y = -p.y, p.x
+	} else {
+		p.x, p.y = p.y, -p.x
+	}
 }
 
 func (p *Point) ManhattanDist(t Point) int64 {
@@ -239,7 +282,6 @@ func LCM(a, b int64, integers ...int64) int64 {
 
 func GCD(x, y int64) int64 {
 	for y != 0 {
-
 		x, y = y, x%y
 	}
 	return x

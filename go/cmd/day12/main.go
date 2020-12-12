@@ -43,29 +43,6 @@ func (pos *Ship) Turn(dir rune, degrees int64) {
 	}
 }
 
-func (pos *Ship) Move(dir rune, steps int64) {
-	switch dir {
-	case 'N':
-		mod := [2]int64{0, steps}
-		pos.location.Move(mod)
-	case 'S':
-		mod := [2]int64{0, -1 * steps}
-		pos.location.Move(mod)
-	case 'E':
-		mod := [2]int64{steps, 0}
-		pos.location.Move(mod)
-	case 'W':
-		mod := [2]int64{-1 * steps, 0}
-		pos.location.Move(mod)
-	case 'L':
-		pos.Turn(dir, steps)
-	case 'R':
-		pos.Turn(dir, steps)
-	case 'F':
-		pos.Move(pos.direction, steps)
-	}
-}
-
 func main() {
 	file := os.Args[1]
 	input := make(chan string, 5)
@@ -82,7 +59,6 @@ func main() {
 	}
 
 	waypoint := helpers.NewPoint(10,1)
-	fmt.Println(waypoint)
 
 	for inp := range input {
 		dir := rune(inp[0])
@@ -90,13 +66,39 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		ship.Move(dir, steps)
 
-		if dir == 'F' {
-			ship1.Move(dir, steps)
+		switch dir {
+		case 'N':
+			ship.location.MoveDirN(dir, steps)
+			waypoint.MoveDirN(dir, steps)
+		case 'E':
+			ship.location.MoveDirN(dir, steps)
+			waypoint.MoveDirN(dir, steps)
+		case 'S':
+			ship.location.MoveDirN(dir, steps)
+			waypoint.MoveDirN(dir, steps)
+		case 'W':
+			ship.location.MoveDirN(dir, steps)
+			waypoint.MoveDirN(dir, steps)
+		case 'F':
+			ship.location.MoveDirN(ship.direction, steps)
+			ship1.location.MoveRelativeN(waypoint, steps)
+		case 'R':
+			ship.Turn(dir, steps)
+			turn := int(steps / 90)
+			for i := 0; i < turn; i++ {
+				waypoint.Rotate90(false)
+			}
+		case 'L':
+			ship.Turn(dir, steps)
+			turn := int(steps / 90)
+			for i := 0; i < turn; i++ {
+				waypoint.Rotate90(true)
+			}
 		}
 	}
 
 	start := helpers.NewPoint(0, 0)
 	fmt.Printf("solution for part 1: %d\n", ship.location.ManhattanDist(*start))
+	fmt.Printf("solution for part 2: %d\n", ship1.location.ManhattanDist(*start))
 }
