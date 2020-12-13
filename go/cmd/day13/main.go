@@ -50,22 +50,22 @@ func main() {
 
 
 	busID := inService[0]
-	times := uint64(0)
-	for {
-		timestamp := busID * times
-		matching := 0
-		for ind, busN := range inService[1:] {
-			t := timestamp + offset[ind+1]
-			if r := t % busN; r != 0 {
+	time := uint64(0)
+
+	for ind, busN := range inService[1:] {
+		var times uint64
+		for {
+			times++
+			timestamp := time + busID * times
+			test := (timestamp + offset[ind+1]) % busN
+			if test != 0 {
 				continue
 			}
-			busID = busN
-			matching++
-		}
-		if matching == len(inService[1:]) {
-			fmt.Printf("YES timestamp: %d\n", timestamp)
+			time = timestamp
+			busID = busID * busN
 			break
 		}
-		times++
 	}
+
+	fmt.Printf("solution for part 2: %d\n", time)
 }
