@@ -57,8 +57,8 @@ func main() {
 		for {
 			times++
 			timestamp := time + busID * times
-			test := (timestamp + offset[ind+1]) % busN
-			if test != 0 {
+			isDeparture := (timestamp + offset[ind+1]) % busN
+			if isDeparture != 0 {
 				continue
 			}
 			time = timestamp
