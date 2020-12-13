@@ -48,11 +48,10 @@ func main() {
 
 	fmt.Printf("solution for part 1: %d\n", waitingTime*waitingBus)
 
-	times := uint64(1000000)
 
 	busID := inService[0]
-	found := false
-	for !found {
+	times := uint64(0)
+	for {
 		timestamp := busID * times
 		matching := 0
 		for ind, busN := range inService[1:] {
@@ -60,12 +59,13 @@ func main() {
 			if r := t % busN; r != 0 {
 				continue
 			}
+			busID = busN
 			matching++
 		}
-		times++
 		if matching == len(inService[1:]) {
 			fmt.Printf("YES timestamp: %d\n", timestamp)
-			found = true
+			break
 		}
+		times++
 	}
 }
