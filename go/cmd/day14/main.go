@@ -14,74 +14,63 @@ func main() {
 	input := make(chan string, 5)
 	go helpers.StreamLines(file, input)
 
-	memory := make(map[int]int)
-	mask := make(map[int]int, 36)
+	memory := make(map[string]int64)
+	memory2 := make(map[string]int64)
+	var and, or int64
+	var mask string
 
-	memory2 := make(map[int]int)
-	mask2 := make(map[int]int, 36)
-	
 	for inp := range input {
 		split := strings.Split(inp, " = ")
 		switch split[0][:3] {
 		case "mas":
-			for ind, ch := range split[1] {
-				switch ch {
-				case '1':
-					mask[36-ind-1] = int(ch-'0')
-					mask2[36-ind-1] = int(ch-'0')
-				case '0':
-					mask[36-ind-1] = int(ch-'0')
-					mask2[36-ind-1] = int(ch-'0')
-				case 'X':
-					delete(mask, 36-ind-1)
-					mask2[36-ind-1] = -1
-				}
-			}
+			and, _ = strconv.ParseInt(strings.ReplaceAll(split[1], "X", "1"), 2, 0)
+			or, _ = strconv.ParseInt(strings.ReplaceAll(split[1], "X", "0"), 2, 0)
+			mask = split[1]
 		case "mem":
 			addressStr := strings.TrimRight(split[0][4:], "]")
-			address, err := strconv.Atoi(addressStr)
-			if err != nil {
-				panic(err)
+			address, _ := strconv.ParseInt(addressStr, 10, 64)
+			val, _ := strconv.Atoi(split[1])
+			value := int64(val)
+
+			for _, genAddr := range generateAddresses("", mask, fmt.Sprintf("%036b", address)) {
+				memory2[genAddr] = value
 			}
-			address2 := address
-			value, err := strconv.Atoi(split[1])
-			if err != nil {
-				panic(err)
-			}
-			for k, v := range mask {
-				if v == 1 {
-					value = SetBit(value, k)
-				}
-				if v == 0 {
-					value = ClearBit(value, k)
-				}
-			}
-			for k, v := range mask2 {
-				if v == 1 || v == 0 {
-				    address2 |= v << k
-				}
-			}
-			memory[address] = value
-			memory2[address2] = value
+			
+			value &= and
+			value |= or
+			memory[addressStr] = value
 		}
 	}
 
-	fmt.Println(memory2)
-
-	sum := 0
+	sum := int64(0)
 	for _, v := range memory {
 		sum += v
 	}
+	sum2 := int64(0)
+	for _, v := range memory2 {
+		sum2 += v
+	}
 
 	fmt.Printf("solution to part 1: %d\n", sum)
+	fmt.Printf("solution to part 2: %d\n", sum2)
 }
 
-func SetBit(n, pos int) int {
-	n |= (1 << pos)
-	return n
-}
+func generateAddresses(mask, remain, addr string) []string {
+	if len(remain) == 0 {
+		return []string{mask}
+	}
 
-func ClearBit(n, pos int) int {
-	n &= ^(1 << pos)
-	return n
+	switch remain[0] {
+	case '0':
+		return generateAddresses(mask+string(addr[len(mask)]), remain[1:], addr)
+	case '1':
+		return generateAddresses(mask+"1", remain[1:], addr)
+	case 'X':
+		return append(
+			generateAddresses(mask+"0", remain[1:], addr),
+			generateAddresses(mask+"1", remain[1:], addr)...
+		)
+	default:
+		panic(fmt.Errorf("unkown mask %s", string(remain[0])))
+	}
 }
