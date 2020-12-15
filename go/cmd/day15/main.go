@@ -22,25 +22,50 @@ func main() {
 	round := make(chan int, len(starting))
 	age := make(chan int)
 	end := make(chan bool)
+	round2 := make(chan int, len(starting))
+	age2 := make(chan int)
+	end2 := make(chan bool)
 
-	//go determineAge(len(starting), 2020, round, age, end)
-	go determineAge(len(starting), 30000000, round, age, end)
+	go determineAge(len(starting), 2020, round, age, end)
+	go determineAge(len(starting), 30000000, round2, age2, end2)
 
 	for _, start := range starting {
 		round <- start
+		round2 <- start
 	}
 
-	turn := 1
+	go func() {
+		turn := 1
+		var cur int
+		for stop := range end {
+			cur = <-age
+			turn++
+			if turn <= len(starting) {
+				continue
+			}
+			if stop {
+				break
+			}
+			round <- cur
+		}
+		close(age)
+		close(round)
+		fmt.Printf("solution for part 1: %d\n", cur)
+	}()
+
+	turn2 := 1
 	var cur int
-	for _ = range end {
-		cur = <-age
-		turn++
-		if turn <= len(starting) {
+	for _ = range end2 {
+		cur = <-age2
+		turn2++
+		if turn2 <= len(starting) {
 			continue
 		}
-		round <- cur
+		round2 <- cur
 	}
-	fmt.Println(cur)
+	close(age2)
+	close(round2)
+	fmt.Printf("solution for part 2: %d\n", cur)
 }
 
 func determineAge(startingSize, stopping int, inp <-chan int, spoken chan<- int, end chan<- bool) {
