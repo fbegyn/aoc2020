@@ -9,11 +9,6 @@ import (
 	"github.com/fbegyn/aoc2020/go/helpers"
 )
 
-type Point struct {
-	x, y int
-	tree bool
-}
-
 func main() {
 	file := os.Args[1]
 	input := helpers.OpenFile(file)
@@ -71,10 +66,7 @@ func (l *Location) Move(x, y int) {
 }
 
 func (l *Location) IsTree(r rune) bool {
-	if r == '.' {
-		return false
-	}
-	return true
+	return r != '.'
 }
 
 func (l *Location) CountTrees(x, y int) int {

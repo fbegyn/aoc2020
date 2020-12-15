@@ -55,7 +55,7 @@ func main() {
 
 	turn2 := 1
 	var cur int
-	for _ = range end2 {
+	for range end2 {
 		cur = <-age2
 		turn2++
 		if turn2 <= len(starting) {
@@ -87,7 +87,7 @@ func determineAge(startingSize, stopping int, inp <-chan int, spoken chan<- int,
 		}
 
 		var answer int
-		l, _ := last[in]
+		l := last[in]
 		prev := l[0]
 		before := l[1]
 		if before == 0 {

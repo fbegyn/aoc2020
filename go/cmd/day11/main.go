@@ -63,10 +63,7 @@ func NewField(m [][]byte, thresh int) *Field {
 }
 
 func (f *Field) IsSeat(x, y int) bool {
-	if f.m[y][x] != '.' {
-		return true
-	}
-	return false
+	return f.m[y][x] != '.'
 }
 
 func (f *Field) Set(x, y int, state bool) bool {

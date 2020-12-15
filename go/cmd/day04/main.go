@@ -211,17 +211,14 @@ func (p *Passport) IsValidStrict() bool {
 	default:
 		return false
 	}
-	hclRegex := regexp.MustCompile("#[0-9a-f]{6}")
+	hclRegex := regexp.MustCompile(`#[0-9a-f]{6}`)
 	if !hclRegex.MatchString(p.hcl) {
 		return false
 	}
-	eclRegex := regexp.MustCompile("^amb|blu|brn|gry|grn|hzl|oth$")
+	eclRegex := regexp.MustCompile(`^amb|blu|brn|gry|grn|hzl|oth$`)
 	if !eclRegex.MatchString(p.ecl) {
 		return false
 	}
-	pidRegex := regexp.MustCompile("^[\\d]{9}$")
-	if !pidRegex.MatchString(p.pid) {
-		return false
-	}
-	return true
+	pidRegex := regexp.MustCompile(`^[\d]{9}$`)
+	return pidRegex.MatchString(p.pid)
 }

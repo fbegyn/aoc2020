@@ -74,10 +74,7 @@ func (r *PasswordRule) ValidToboggan(p string) bool {
 			count += 1
 		}
 	}
-	if count != 1 {
-		return false
-	}
-	return true
+	return count != 1
 }
 
 func main() {
@@ -108,12 +105,4 @@ func main() {
 
 	fmt.Println(validSledPassword)
 	fmt.Println(validTobogganPassword)
-}
-
-func part1() (error) {
-	return nil
-}
-
-func part2() (error) {
-	return nil
 }

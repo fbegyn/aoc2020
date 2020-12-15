@@ -43,8 +43,7 @@ func main() {
 		go helpers.RunProgram(fix, output, halt, loop)
 	}
 
-	select {
-	case <-halt:
-		log.Printf("solution to part 2: %d", <-output)
-	}
+
+	<-halt
+	log.Printf("solution to part 2: %d", <-output)
 }

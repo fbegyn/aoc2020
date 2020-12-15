@@ -34,7 +34,7 @@ func BenchmarkPart1Regex(b *testing.B) {
 
 	validSledPassword := 0
 
-	regex := regexp.MustCompile("(\\d+)-(\\d+) ([a-z]): ([a-z]+)$")
+	regex := regexp.MustCompile(`(\d+)-(\d+) ([a-z]): ([a-z]+)$`)
 
 	scanner := bufio.NewScanner(input)
 	for i := 0; i < b.N; i++ {
@@ -76,7 +76,7 @@ func BenchmarkPart2Regex(b *testing.B) {
 
 	validTobogganPassword := 0
 
-	regex := regexp.MustCompile("(\\d+)-(\\d+) ([a-z]): ([a-z]+)$")
+	regex := regexp.MustCompile(`(\d+)-(\d+) ([a-z]): ([a-z]+)$`)
 
 	scanner := bufio.NewScanner(input)
 	for i := 0; i < b.N; i++ {
