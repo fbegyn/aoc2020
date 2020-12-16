@@ -67,6 +67,14 @@ func SumOfIntArray(test []int) (result int) {
 	return
 }
 
+func MultIntArray(test []int) (mult int) {
+	mult = ownTicket[depart[0]]
+        for _, n := range depart[1:] {
+                mult *= ownTicket[n]
+        }
+	return
+}
+
 func Abs(x int64) int64 {
 	if x < 0 {
 		return -x
