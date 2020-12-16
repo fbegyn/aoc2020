@@ -122,16 +122,17 @@ func main() {
 		}
 	}
 
-	mult := 0
+	depart := []int{}
 	for k, v := range mapping {
 		if strings.HasPrefix(v, "departure") {
-			fmt.Printf("%s has value %d\n", v, ownTicket[k])
-			if mult == 0 {
-				mult += ownTicket[k]
-			} else {
-				mult *= ownTicket[k]
-			}
+			fmt.Printf("%s is col %d  and has value %d\n", v, k, ownTicket[k])
+			depart = append(depart, ownTicket[k])
 		}
+	}
+
+	mult := depart[0]
+	for _, n := range depart[1:] {
+		mult *= n
 	}
 
 	fmt.Printf("solution for part 1: %d\n", helpers.SumOfIntArray(invalidNumbers))
