@@ -33,21 +33,17 @@ func eval(s string, ind int) (int, int) {
 			} else {
 				result *= r
 			}
-		case ')':
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			ind++
-			break
+			number := int(ch - '0')
+			if op == '+' {
+				result += number
+			} else {
+				result *= number
+			}
 		default:
 			ind++
-			if '0' <= ch || ch <= '9' {
-				number := int(ch - '0')
-				if op == '+' {
-					result += number
-				} else {
-					result *= number
-				}
-			} else {
-				break
-			}
+			break
 		}
 	}
 	return result, ind
@@ -65,6 +61,6 @@ func main() {
 	}
 
 	fmt.Println(results)
-	
+
 	fmt.Printf("solution to part 1: %d\n", helpers.SumOfIntArray(results))
 }
