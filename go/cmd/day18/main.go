@@ -13,6 +13,7 @@ import (
 func eval(s string, ind int) (int, int) {
 	result := int(0)
 	op := '+'
+L:
 	for ind < len(s) {
 		switch ch := s[ind]; ch {
 		case ' ':
@@ -43,7 +44,7 @@ func eval(s string, ind int) (int, int) {
 			}
 		default:
 			ind++
-			break
+			break L
 		}
 	}
 	return result, ind
@@ -59,8 +60,6 @@ func main() {
 		res, _ := eval(inp, 0)
 		results = append(results, res)
 	}
-
-	fmt.Println(results)
 
 	fmt.Printf("solution to part 1: %d\n", helpers.SumOfIntArray(results))
 }
